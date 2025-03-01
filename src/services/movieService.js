@@ -98,12 +98,20 @@ export default class MovieService {
   async getAllMovies(page, limit) {
     const skip = (page - 1) * limit;
 
+    const totalCount = await this.collection.countDocuments();
+
+    const totalPages = Math.ceil(totalCount / limit);
+
     const movies = await this.collection
       .find({})
       .skip(skip)
       .limit(limit)
       .toArray();
 
-    return movies;
+      return {
+        movies,
+        totalPages,  
+        totalCount   
+      };
   }
 }
