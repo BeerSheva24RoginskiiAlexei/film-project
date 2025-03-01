@@ -4,10 +4,12 @@ import MongoConnection from "../src/connection/MongoConnection.js";
 import userRoutes from "./routes/usersRoutes.js";
 import movieRoutes from "./routes/moviesRoutes.js";
 import favoriteRoutes from "./routes/favoriteRoutes.js";
+import commentsRoutes from "./routes/commentsRoutes.js";
 import { errorHandler, rateLimiter } from "./middlewares/index.js";
 import { initUserService } from "./controllers/usersController.js";
 import { initMovieService } from "./controllers/moviesController.js";
 import { initFavoriteService } from "./controllers/favoriteController.js";
+import { initCommentService } from "./controllers/commentsController.js";
 
 dotenv.config();
 const app = express();
@@ -23,6 +25,7 @@ async function startServer() {
     initUserService(mongoConnection);
     initMovieService(mongoConnection);
     initFavoriteService(mongoConnection);
+    initCommentService(mongoConnection);
 
     app.use(express.json());
     app.use(rateLimiter);
@@ -30,6 +33,7 @@ async function startServer() {
     app.use("/api/users", userRoutes);
     app.use("/api/movies", movieRoutes);
     app.use("/api/favorites", favoriteRoutes);
+    app.use("/api/comments", commentsRoutes);
     app.use(errorHandler);
 
     const port = process.env.PORT || 5000;

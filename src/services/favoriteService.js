@@ -1,5 +1,4 @@
 import dotenv from "dotenv";
-import { ObjectId } from "mongodb";
 dotenv.config();
 
 export default class FavoriteService {
@@ -59,25 +58,25 @@ export default class FavoriteService {
     }
   }
 
-  async updateFavorite(email, movieId, newMovieId, viewed, feed_back) {
+  async updateFavorite(email, movieId, feed_back, viewed) {
     try {
-      const result = await this.collection.findOneAndUpdate(
+      await this.collection.updateOne(
         { email, movieId },
         {
           $set: {
-            movieId: newMovieId,
-            viewed,
             feed_back,
+            viewed,
           },
-        },
-        { returnDocument: "after" }
+        }
       );
+      
+      const updatedFavorite = await this.collection.findOne({ email, movieId });
 
-      if (!result.value) {
+      if (!updatedFavorite) {
         throw new Error("Favorite not found");
       }
 
-      return result.value;
+      return updatedFavorite;
     } catch (error) {
       console.error("Error updating favorite:", error);
       throw new Error("Failed to update favorite");

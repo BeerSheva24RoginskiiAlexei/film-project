@@ -73,12 +73,15 @@ export async function updateFavorite(req, res) {
     const updatedFavorite = await favoriteService.updateFavorite(
       email,
       movieId,
-      viewed,
-      feed_back
+      feed_back,
+      viewed
     );
 
     res.json(updatedFavorite);
   } catch (error) {
+    if (error.message === "Favorite not found") {
+      return res.status(404).json({ error: error.message });
+    }
     res.status(500).json({ error: "Failed to update favorite" });
   }
 }

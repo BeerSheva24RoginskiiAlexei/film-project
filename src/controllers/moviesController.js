@@ -76,3 +76,18 @@ export async function rateMovie(req, res) {
     res.status(500).json({ error: "Internal server error" });
   }
 }
+
+export async function getAllMovies(req, res) {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
+    const limitNumber = Math.max(parseInt(limit, 10) || 20, 1);
+
+    const movies = await movieService.getAllMovies(pageNumber, limitNumber);
+    res.status(200).json(movies);
+  } catch (error) {
+    console.error("Error fetching all movies:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+

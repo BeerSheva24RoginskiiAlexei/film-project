@@ -94,4 +94,16 @@ export default class MovieService {
 
     throw new Error("Failed to update the movie rating");
   }
+
+  async getAllMovies(page, limit) {
+    const skip = (page - 1) * limit;
+
+    const movies = await this.collection
+      .find({})
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+
+    return movies;
+  }
 }
