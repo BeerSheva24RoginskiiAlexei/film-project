@@ -7,7 +7,7 @@ export default class MovieService {
     this.collection = mongoConnection.getCollection("movies");
   }
 
-  async getPopularMovies(year, actor, genres, language, amount) {
+  async getPopularMovies(year, actor, genres, language, amount, title) {
     const filter = {};
 
     if (year) {
@@ -24,6 +24,10 @@ export default class MovieService {
 
     if (language) {
       filter.languages = { $in: [language] };
+    }
+
+    if (title) {
+      filter.title = { $regex: title, $options: "i" };
     }
 
     const movies = await this.collection
@@ -108,10 +112,10 @@ export default class MovieService {
       .limit(limit)
       .toArray();
 
-      return {
-        movies,
-        totalPages,  
-        totalCount   
-      };
+    return {
+      movies,
+      totalPages,
+      totalCount,
+    };
   }
 }

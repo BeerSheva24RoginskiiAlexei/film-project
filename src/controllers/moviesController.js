@@ -8,13 +8,14 @@ export function initMovieService(db) {
 
 export async function getPopularMovie(req, res) {
   try {
-    const { year, actor, genres, language, amount } = req.query;
+    const { year, actor, genres, language, amount, title } = req.query;
 
     const movies = await movieService.getPopularMovies(
       year ? Number(year) : undefined,
       actor,
       genres ? genres.split(",") : undefined,
       language,
+      title,
       amount ? Number(amount) : 10
     );
 
