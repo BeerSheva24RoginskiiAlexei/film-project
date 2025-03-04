@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # Копируем файл .env в контейнер для использования переменных окружения
-# COPY .env .env
+COPY .env .env
 
 # Открываем порты для приложения и MongoDB
 EXPOSE 3000
