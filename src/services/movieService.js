@@ -7,39 +7,98 @@ export default class MovieService {
     this.collection = mongoConnection.getCollection("movies");
   }
 
-  async getPopularMovies(year, actor, genres, language, amount, title) {
-    const filter = {};
+  // async getPopularMovies(year, actor, genres, language, amount, title) {
+  //   const filter = {};
 
+  //   if (year) {
+  //     filter.year = year;
+  //   }
+
+  //   if (actor) {
+  //     filter.cast = actor;
+  //   }
+
+  //   if (genres) {
+  //     filter.genres = { $in: [genres] };
+  //   }
+
+  //   if (language) {
+  //     filter.languages = { $in: [language] };
+  //   }
+
+  //   if (title) {
+  //     filter.title = { $regex: title, $options: "i" };
+  //   }
+
+  //   const movies = await this.collection
+  //     .find(filter)
+  //     .sort({ "imdb.rating": -1 })
+  //     .limit(amount)
+  //     .toArray();
+
+  //   return movies;
+  // }
+  async getPopularMovies(year, actor, genres, language, title, limit, page) {
+    const filter = {};
+  
     if (year) {
       filter.year = year;
     }
-
+  
     if (actor) {
       filter.cast = actor;
     }
-
+  
     if (genres) {
-      filter.genres = { $in: [genres] };
+      filter.genres = { $in: genres };  
     }
-
+  
     if (language) {
       filter.languages = { $in: [language] };
     }
-
+  
     if (title) {
       filter.title = { $regex: title, $options: "i" };
     }
-
+  
+    const skip = (page - 1) * limit;
+  
     const movies = await this.collection
       .find(filter)
       .sort({ "imdb.rating": -1 })
-      .limit(amount)
+      .skip(skip)
+      .limit(limit)
       .toArray();
-
+  
     return movies;
   }
+  
+  async getMoviesCount(year, actor, genres, language, title) {
+    const filter = {};
+  
+    if (year) {
+      filter.year = year;
+    }
+  
+    if (actor) {
+      filter.cast = actor;
+    }
+  
+    if (genres) {
+      filter.genres = { $in: genres };
+    }
+  
+    if (language) {
+      filter.languages = { $in: [language] };
+    }
+  
+    if (title) {
+      filter.title = { $regex: title, $options: "i" };
+    }
+  
+    return await this.collection.countDocuments(filter);
+  }
   async getCommentedMovie(year, actor, genres, language, amount) {
-    console.log("Fetching commented movies...");
     const filter = {};
     if (year) filter.year = year;
     if (actor) filter.cast = actor;
@@ -52,7 +111,6 @@ export default class MovieService {
       .limit(amount)
       .toArray();
 
-    console.log("Fetched movies:", movies.length);
     return movies;
   }
   async getMovieById(id) {
@@ -117,5 +175,29 @@ export default class MovieService {
       totalPages,
       totalCount,
     };
+  }
+
+  async getAllMovieMetadata() {
+    try {
+      const [languages, actors, genres, years] = await Promise.all([
+        this.collection.distinct("languages"),
+        this.collection.distinct("cast"),
+        this.collection.distinct("genres"),
+        this.collection.distinct("year"),
+      ]);
+
+      const processedData = {
+        languages: languages.filter((lang) => lang).sort(),
+        actors: actors.filter((actor) => actor).sort(),
+        genres: genres.filter((genre) => genre).sort(),
+        years: years
+          .filter((year) => year && !isNaN(year))
+          .sort((a, b) => a - b),
+      };
+
+      return processedData;
+    } catch (error) {
+      throw new Error(`Failed to fetch movie metadata: ${error.message}`);
+    }
   }
 }

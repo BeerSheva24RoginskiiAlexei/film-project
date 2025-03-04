@@ -5,6 +5,7 @@ import {
   rateMovie,
   getMovieById,
   getAllMovies,
+  getAllMovieMetadata,
 } from "../controllers/moviesController.js";
 import {
   authenticate,
@@ -30,6 +31,8 @@ router.get(
 );
 
 router.get("/getAllMovies", getAllMovies);
+
+router.get("/metadata", getAllMovieMetadata);
 
 router.get("/:id", authenticate, limitForNonAdmins, getMovieById);
 

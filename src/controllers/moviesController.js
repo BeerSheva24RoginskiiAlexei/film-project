@@ -8,7 +8,18 @@ export function initMovieService(db) {
 
 export async function getPopularMovie(req, res) {
   try {
-    const { year, actor, genres, language, amount, title } = req.query;
+    const { year, actor, genres, language, amount, title, page } = req.query;
+    
+    const limit = amount ? Number(amount) : 9;
+    const pageNumber = page ? Number(page) : 1;
+
+    if (isNaN(limit) || limit <= 0) {
+      return res.status(400).json({ error: "'amount' must be a positive number" });
+    }
+    
+    if (isNaN(pageNumber) || pageNumber <= 0) {
+      return res.status(400).json({ error: "'page' must be a positive number" });
+    }
 
     const movies = await movieService.getPopularMovies(
       year ? Number(year) : undefined,
@@ -16,10 +27,29 @@ export async function getPopularMovie(req, res) {
       genres ? genres.split(",") : undefined,
       language,
       title,
-      amount ? Number(amount) : 10
+      limit,  
+      pageNumber
     );
 
-    res.status(200).json(movies);
+    const totalMovies = await movieService.getMoviesCount(
+      year ? Number(year) : undefined,
+      actor,
+      genres ? genres.split(",") : undefined,
+      language,
+      title
+    );
+
+    const response = {
+      movies,
+      pagination: {
+        currentPage: pageNumber,
+        itemsPerPage: limit,
+        totalItems: totalMovies,
+        totalPages: Math.ceil(totalMovies / limit)
+      }
+    };
+
+    res.status(200).json(response);
   } catch (error) {
     console.error("Error getting popular movies:", error);
     res.status(400).json({ error: error.message });
@@ -27,7 +57,6 @@ export async function getPopularMovie(req, res) {
 }
 
 export async function getCommentedMovie(req, res) {
-  console.log("test");
   try {
     const { year, actor, genres, language, amount } = req.query;
     const movies = await movieService.getCommentedMovie(
@@ -65,13 +94,11 @@ export async function rateMovie(req, res) {
   const { imdbId, rating } = req.body;
 
   try {
-    const newRating = await movieService.addRate(imdbId, rating); 
-    res
-      .status(200)
-      .json({
-        message: "Movie rating updated successfully",
-        rating: newRating,
-      }); 
+    const newRating = await movieService.addRate(imdbId, rating);
+    res.status(200).json({
+      message: "Movie rating updated successfully",
+      rating: newRating,
+    });
   } catch (error) {
     console.error("Error updating movie rating:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -92,3 +119,19 @@ export async function getAllMovies(req, res) {
   }
 }
 
+export async function getAllMovieMetadata(req, res) {
+  try {
+    const metadata = await movieService.getAllMovieMetadata();
+    res.status(200).json({
+      success: true,
+      data: metadata
+    });
+  } catch (error) {
+    console.error("Error fetching movie metadata:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
+  }
+}

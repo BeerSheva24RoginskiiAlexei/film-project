@@ -35,31 +35,32 @@ export default class UserService {
     return newUser;
   }
 
-  // Аутентификация 
+  // Аутентификация
   async authenticateUser(email, password) {
-  
     const user = await this.collection.findOne({ _id: email });
-  
+
     if (!user || user.blocked) {
       throw new Error("User not found or account is blocked.", user);
     }
-  
+
     const isPasswordCorrect = await bcrypt.compare(password, user.hashPassword);
     if (!isPasswordCorrect) {
       throw new Error("Invalid password.");
     }
 
     if (!JWT_SECRET) {
-        throw new Error("JWT_SECRET is not defined. Please check your environment variables.");
-      }
-  
+      throw new Error(
+        "JWT_SECRET is not defined. Please check your environment variables."
+      );
+    }
+
     const token = jwt.sign({ _id: user._id, role: user.role }, JWT_SECRET, {
       expiresIn: JWT_EXPIRATION,
     });
     return token;
   }
 
-  // Обновление роли 
+  // Обновление роли
   async updateUserRole(email, newRole) {
     const result = await this.collection.updateOne(
       { _id: email },
@@ -72,29 +73,27 @@ export default class UserService {
     if (!newPassword) {
       throw new Error("New password is required");
     }
-  
+
     const user = await this.collection.findOne({ _id: email });
     if (!user || user.blocked) {
       throw new Error("User not found or account is blocked.");
     }
-  
-    const isPasswordCorrect = await bcrypt.compare(currentPassword, user.hashPassword);
+
+    const isPasswordCorrect = await bcrypt.compare(
+      currentPassword,
+      user.hashPassword
+    );
     if (!isPasswordCorrect) {
       throw new Error("Invalid current password.");
     }
-  
-    const hashPasword = await bcrypt.hash(newPassword, 10); 
-    await this.collection.updateOne(
-      { _id: email },
-      { $set: { hashPasword } }
-    );
-  
+
+    const hashPasword = await bcrypt.hash(newPassword, 10);
+    await this.collection.updateOne({ _id: email }, { $set: { hashPasword } });
+
     return { message: "Password updated successfully" };
   }
-  
-  
 
-  // Блокировка 
+  // Блокировка
   async blockUser(email) {
     const result = await this.collection.updateOne(
       { _id: email },
@@ -103,7 +102,7 @@ export default class UserService {
     return result.modifiedCount > 0;
   }
 
-  // Разблокировка 
+  // Разблокировка
   async unblockUser(email) {
     const result = await this.collection.updateOne(
       { _id: email },
@@ -121,7 +120,7 @@ export default class UserService {
     return user;
   }
 
-  // Удаление 
+  // Удаление
   async deleteUser(email) {
     const result = await this.collection.deleteOne({ _id: email });
     return result.deletedCount > 0;

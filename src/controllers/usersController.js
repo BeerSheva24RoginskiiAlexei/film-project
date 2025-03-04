@@ -7,7 +7,6 @@ export function initUserService(db) {
   userService = new UserService(db);
 }
 
-
 export async function createUser(req, res) {
   try {
     const user = await userService.createUser(req.body);
@@ -17,7 +16,6 @@ export async function createUser(req, res) {
     res.status(400).json({ error: error.message });
   }
 }
-
 
 export async function login(req, res) {
   try {
@@ -30,11 +28,9 @@ export async function login(req, res) {
   }
 }
 
-
 export async function updateRole(req, res) {
   try {
     const { email, role } = req.body;
-    console.log(email, role);
     const success = await userService.updateUserRole(email, role);
     if (success) {
       res.status(200).json({ message: "User role updated successfully." });
@@ -55,7 +51,7 @@ export async function updatePassword(req, res) {
       currentPassword,
       newPassword
     );
-    
+
     if (success) {
       res.status(200).json({ message: "Password updated successfully." });
     } else {
@@ -67,7 +63,6 @@ export async function updatePassword(req, res) {
   }
 }
 
-
 export async function getAccount(req, res) {
   const { email } = req.params;
   try {
@@ -78,7 +73,6 @@ export async function getAccount(req, res) {
     res.status(404).json({ error: error.message });
   }
 }
-
 
 export async function blockUser(req, res) {
   const { email } = req.params;
@@ -95,7 +89,6 @@ export async function blockUser(req, res) {
   }
 }
 
- 
 export async function unblockUser(req, res) {
   const { email } = req.params;
   try {

@@ -48,7 +48,6 @@ export async function getUserFavorites(req, res) {
 export async function deleteFavorite(req, res) {
   try {
     const { email, movieId } = req.body;
-    console.log(`deleting ${movieId} from ${email}`);
     if (!email || !movieId) {
       return res.status(400).json({ error: "Email and movieId are required" });
     }

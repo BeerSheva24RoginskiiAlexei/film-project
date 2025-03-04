@@ -10,9 +10,17 @@ import { initUserService } from "./controllers/usersController.js";
 import { initMovieService } from "./controllers/moviesController.js";
 import { initFavoriteService } from "./controllers/favoriteController.js";
 import { initCommentService } from "./controllers/commentsController.js";
+import cors from "cors";
 
 dotenv.config();
 const app = express();
+app.use(
+  cors({
+    origin: "*", 
+    methods: ["GET", "POST", "PUT", "DELETE"], 
+    allowedHeaders: ["Content-Type", "Authorization"], 
+  })
+);
 const { MONGO_CONNECTION, MONGO_PASSWORD, MONGO_CLUSTER } = process.env;
 const connectionString = `${MONGO_CONNECTION}:${MONGO_PASSWORD}@${MONGO_CLUSTER}`;
 const mongoConnection = new MongoConnection(connectionString, "sample_mflix");

@@ -40,7 +40,6 @@ export default class FavoriteService {
   }
 
   async deleteFavorite(email, movieId) {
-    console.log(email, movieId);
     try {
       const result = await this.collection.findOneAndDelete({
         email,
