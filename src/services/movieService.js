@@ -7,95 +7,64 @@ export default class MovieService {
     this.collection = mongoConnection.getCollection("movies");
   }
 
-  // async getPopularMovies(year, actor, genres, language, amount, title) {
-  //   const filter = {};
-
-  //   if (year) {
-  //     filter.year = year;
-  //   }
-
-  //   if (actor) {
-  //     filter.cast = actor;
-  //   }
-
-  //   if (genres) {
-  //     filter.genres = { $in: [genres] };
-  //   }
-
-  //   if (language) {
-  //     filter.languages = { $in: [language] };
-  //   }
-
-  //   if (title) {
-  //     filter.title = { $regex: title, $options: "i" };
-  //   }
-
-  //   const movies = await this.collection
-  //     .find(filter)
-  //     .sort({ "imdb.rating": -1 })
-  //     .limit(amount)
-  //     .toArray();
-
-  //   return movies;
-  // }
   async getPopularMovies(year, actor, genres, language, title, limit, page) {
     const filter = {};
-  
+
     if (year) {
       filter.year = year;
     }
-  
+
     if (actor) {
       filter.cast = actor;
     }
-  
+
     if (genres) {
-      filter.genres = { $in: genres };  
+      filter.genres = { $in: genres };
     }
-  
+
     if (language) {
       filter.languages = { $in: [language] };
     }
-  
+
     if (title) {
       filter.title = { $regex: title, $options: "i" };
     }
-  
+
     const skip = (page - 1) * limit;
-  
+
     const movies = await this.collection
       .find(filter)
       .sort({ "imdb.rating": -1 })
       .skip(skip)
       .limit(limit)
       .toArray();
-  
+
     return movies;
   }
-  
+
   async getMoviesCount(year, actor, genres, language, title) {
     const filter = {};
-  
+
     if (year) {
       filter.year = year;
     }
-  
+
     if (actor) {
       filter.cast = actor;
     }
-  
+
     if (genres) {
       filter.genres = { $in: genres };
     }
-  
+
     if (language) {
       filter.languages = { $in: [language] };
     }
-  
+
     if (title) {
       filter.title = { $regex: title, $options: "i" };
     }
-  
+
     return await this.collection.countDocuments(filter);
   }
   async getCommentedMovie(year, actor, genres, language, amount) {

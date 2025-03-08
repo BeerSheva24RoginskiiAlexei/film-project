@@ -105,15 +105,19 @@ export async function unblockUser(req, res) {
 }
 export async function deleteUser(req, res) {
   const { email } = req.params;
+  const requestingUser = req.user;
+
   try {
-    const success = await userService.deleteUser(email);
-    if (success) {
-      res.status(200).json({ message: "User deleted successfully." });
-    } else {
-      res.status(404).json({ error: "User not found." });
+    if (requestingUser.role !== "ADMIN" && requestingUser._id !== email) {
+      return res
+        .status(403)
+        .json({ error: "Forbidden: Insufficient permissions" });
     }
+
+    const result = await userService.deleteUser(email, requestingUser);
+    res.status(200).json({ message: result });
   } catch (error) {
-    logger.error(`Error deleting user: ${error.message}`);
-    res.status(400).json({ error: error.message });
+    logger.error(`Error deleting user ${email}: ${error.message}`);
+    res.status(error.status || 400).json({ error: error.message });
   }
 }

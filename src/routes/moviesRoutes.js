@@ -4,7 +4,6 @@ import {
   getCommentedMovie,
   rateMovie,
   getMovieById,
-  getAllMovies,
   getAllMovieMetadata,
 } from "../controllers/moviesController.js";
 import {
@@ -30,12 +29,16 @@ router.get(
   getCommentedMovie
 );
 
-router.get("/getAllMovies", getAllMovies);
-
-router.get("/metadata", getAllMovieMetadata);
+router.get("/metadata", authenticate, getAllMovieMetadata);
 
 router.get("/:id", authenticate, limitForNonAdmins, getMovieById);
 
-router.put("/rate", validateRating, rateMovie);
+router.post(
+  "/rate",
+  authenticate,
+  authorize(["PREMIUM_USER"]),
+  validateRating,
+  rateMovie
+);
 
 export default router;

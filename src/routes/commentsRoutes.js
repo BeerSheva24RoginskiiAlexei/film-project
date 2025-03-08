@@ -16,8 +16,13 @@ router.get("/user/:email", authenticate, getUserComments);
 
 router.post("/", authenticate, authorize(["PREMIUM_USER"]), addComment);
 
-router.put("/", authenticate, authorize(["PREMIUM_USER"]), updateComment);
+router.put("/", authenticate, authorize(["PREMIUM_USER"], true), updateComment);
 
-router.delete("/", authenticate, deleteComment);
+router.delete(
+  "/:commentId",
+  authenticate,
+  authorize(["PREMIUM_USER", "ADMIN"], true),
+  deleteComment
+);
 
 export default router;

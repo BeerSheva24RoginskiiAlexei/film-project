@@ -22,5 +22,4 @@ router.delete("/", authenticate, authorize(["PREMIUM_USER"]), deleteFavorite);
 
 router.put("/", authenticate, authorize(["PREMIUM_USER"]), updateFavorite);
 
-
 export default router;

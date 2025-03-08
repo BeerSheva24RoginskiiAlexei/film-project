@@ -10,15 +10,16 @@ import { initUserService } from "./controllers/usersController.js";
 import { initMovieService } from "./controllers/moviesController.js";
 import { initFavoriteService } from "./controllers/favoriteController.js";
 import { initCommentService } from "./controllers/commentsController.js";
+import morganLogger from "./logger/morganLogger.js";
 import cors from "cors";
 
 dotenv.config();
 const app = express();
 app.use(
   cors({
-    origin: "*", 
-    methods: ["GET", "POST", "PUT", "DELETE"], 
-    allowedHeaders: ["Content-Type", "Authorization"], 
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 const { MONGO_CONNECTION, MONGO_PASSWORD, MONGO_CLUSTER } = process.env;
@@ -30,6 +31,8 @@ async function startServer() {
     await mongoConnection.connect();
     console.log("Connected to MongoDB");
 
+    app.locals.mongoConnection = mongoConnection;
+
     initUserService(mongoConnection);
     initMovieService(mongoConnection);
     initFavoriteService(mongoConnection);
@@ -37,6 +40,7 @@ async function startServer() {
 
     app.use(express.json());
     app.use(rateLimiter);
+    app.use(morganLogger);
 
     app.use("/api/users", userRoutes);
     app.use("/api/movies", movieRoutes);

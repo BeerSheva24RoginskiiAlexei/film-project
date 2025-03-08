@@ -10,6 +10,8 @@ const JWT_EXPIRATION = process.env.JWT_EXPIRATION || "24h";
 export default class UserService {
   constructor(mongoConnection) {
     this.collection = mongoConnection.getCollection("users");
+    this.favoritesCollection = mongoConnection.getCollection("favorites");
+    this.commentsCollection = mongoConnection.getCollection("comments");
   }
 
   async createUser(userData) {
@@ -35,7 +37,6 @@ export default class UserService {
     return newUser;
   }
 
-  // Аутентификация
   async authenticateUser(email, password) {
     const user = await this.collection.findOne({ _id: email });
 
@@ -60,7 +61,6 @@ export default class UserService {
     return token;
   }
 
-  // Обновление роли
   async updateUserRole(email, newRole) {
     const result = await this.collection.updateOne(
       { _id: email },
@@ -93,7 +93,6 @@ export default class UserService {
     return { message: "Password updated successfully" };
   }
 
-  // Блокировка
   async blockUser(email) {
     const result = await this.collection.updateOne(
       { _id: email },
@@ -102,7 +101,6 @@ export default class UserService {
     return result.modifiedCount > 0;
   }
 
-  // Разблокировка
   async unblockUser(email) {
     const result = await this.collection.updateOne(
       { _id: email },
@@ -111,7 +109,6 @@ export default class UserService {
     return result.modifiedCount > 0;
   }
 
-  // get user
   async getAccount(email) {
     const user = await this.collection.findOne({ _id: email });
     if (!user) {
@@ -120,9 +117,24 @@ export default class UserService {
     return user;
   }
 
-  // Удаление
   async deleteUser(email) {
+    const user = await this.collection.findOne({ _id: email });
+    if (!user) {
+      const error = new Error("User not found");
+      error.status = 404;
+      throw error;
+    }
+
     const result = await this.collection.deleteOne({ _id: email });
-    return result.deletedCount > 0;
+    if (result.deletedCount === 0) {
+      const error = new Error("Failed to delete user");
+      error.status = 500;
+      throw error;
+    }
+
+    await this.favoritesCollection.deleteMany({ email });
+    await this.commentsCollection.deleteMany({ email });
+
+    return "account deleted";
   }
 }

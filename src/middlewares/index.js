@@ -1,43 +1,47 @@
 import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
-import { ObjectId } from "mongodb";
+import dotenv from "dotenv";
 
+dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
-
-
-export function authenticate(req, res, next) {
+export async function authenticate(req, res, next) {
   const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({ error: "Token is missing" });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ error: "Invalid token" });
-    }
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
+
+    const collection = req.app.locals.mongoConnection.getCollection("users");
+    const user = await collection.findOne({ _id: decoded._id });
+
+    if (!user || user.blocked) {
+      return res.status(401).json({ error: "Account is blocked or not found" });
+    }
+
     next();
-  });
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
 }
 
-export function authorize(allowedRoles) {
+export function authorize(allowedRoles, allowOwner = false) {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    if (req.user.role === "ADMIN") {
-      return res
-        .status(403)
-        .json({ error: "Admins are not allowed to access this resource" });
-    }
+    const isRoleAllowed = allowedRoles.includes(req.user.role);
+    const isOwner = allowOwner && req.user._id === req.params.email;
 
-    if (!allowedRoles.includes(req.user.role)) {
+    if (!isRoleAllowed && !isOwner) {
       return res
         .status(403)
-        .json({ error: "Forbidden: You don't have access" });
+        .json({ error: "Forbidden: Insufficient permissions" });
     }
 
     next();
@@ -60,7 +64,9 @@ export function validate(schema) {
 
 export function errorHandler(err, req, res, next) {
   console.error(err);
-  res.status(500).json({ error: "Internal Server Error" });
+  res
+    .status(err.status || 500)
+    .json({ error: err.message || "Internal Server Error" });
 }
 
 export const rateLimiter = rateLimit({
@@ -71,7 +77,7 @@ export const rateLimiter = rateLimit({
 
 export const movieRateLimit = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 5,
+  max: (req) => (req.user.role === "USER" ? 5 : 100),
   message: "Too many requests, please try again later.",
 });
 
@@ -94,32 +100,3 @@ export function validateRating(req, res, next) {
 
   next();
 }
-
-// export const checkCommentDeletePermissions = async (req, res, next) => {
-//   try {
-//     const { commentId, email } = req.body; 
-//     const { role } = req.user; 
-
-//     if (!commentId || !email || !role) {
-//       return res.status(400).json({ message: "Missing required fields" });
-//     }
-
-//     const objectId = new ObjectId(commentId);
-
-//     const comment = await req.db.collection("comments").findOne({ _id: objectId });
-//     if (!comment) {
-//       return res.status(404).json({ message: "Comment not found" });
-//     }
-
-//     if (req.user.role === "ADMIN") {
-//       next();
-//     } else if (req.user.role === "PREMIUM_USER" && comment.email === email) {
-//       next();
-//     } else {
-//       return res.status(403).json({ message: "Forbidden: You do not have permission to delete this comment" });
-//     }
-//   } catch (error) {
-//     console.error("Error in checkCommentDeletePermissions middleware:", error);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
